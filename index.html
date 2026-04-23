@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COMP4141 Notes Sheet</title>
+<link rel="icon" href="4141.ico" type="image/x-icon">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --text: #1C1C1C;
+    --text-soft: #555;
+    --border: #E5E1D8;
+    --accent: #B45309;
+    --accent-soft: #FEF3C7;
+    --code-bg: #F4F2EC;
+    --shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+
+  [data-theme="dark"] {
+    --bg: #14141A;
+    --surface: #1E1E26;
+    --text: #E8E6E0;
+    --text-soft: #9A9A9A;
+    --border: #2E2E38;
+    --accent: #F59E0B;
+    --accent-soft: #3A2E12;
+    --code-bg: #24242E;
+    --shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  code, pre {
+    font-family: "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
+    font-size: 13px;
+  }
+
+  /* ─── Header ──────────────────────── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 24px;
+  }
+  header .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header .title-area { flex: 1; min-width: 0; }
+  header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header .accent-bar {
+    display: inline-block;
+    width: 28px;
+    height: 3px;
+    background: var(--accent);
+    margin-bottom: 12px;
+    border-radius: 2px;
+  }
+  #theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  #theme-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  #theme-toggle .icon-sun { display: none; }
+  [data-theme="dark"] #theme-toggle .icon-sun { display: block; }
+  [data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+
+  /* ─── Layout ──────────────────────── */
+  .layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 48px;
+    padding: 32px 24px;
+  }
+
+  /* ─── TOC ─────────────────────────── */
+  nav#toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding-right: 8px;
+    font-size: 13.5px;
+  }
+  nav#toc .toc-title {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-soft);
+    margin-bottom: 12px;
+  }
+  nav#toc ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  nav#toc li { margin: 2px 0; }
+  nav#toc a {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-soft);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    border-radius: 0 4px 4px 0;
+    transition: all 0.15s ease;
+  }
+  nav#toc a:hover {
+    color: var(--text);
+    background: var(--bg);
+  }
+  nav#toc a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 500;
+  }
+  nav#toc li.toc-sub {
+    margin-left: 16px;
+  }
+  nav#toc li.toc-sub a {
+    font-size: 12.5px;
+    padding: 4px 10px;
+    color: var(--text-soft);
+    position: relative;
+  }
+  nav#toc li.toc-sub a::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    width: 4px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── Main content ────────────────── */
+  main {
+    min-width: 0;
+  }
+  main > .loading {
+    color: var(--text-soft);
+    padding: 48px 0;
+    text-align: center;
+  }
+
+  /* Section cards */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  h2, h3 {
+    scroll-margin-top: 24px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 18px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h3 .chip {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  p { margin: 0.6em 0; }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  a:hover { border-bottom-color: var(--accent); }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 1.4em;
+    margin: 0.5em 0;
+  }
+  li { margin: 2px 0; }
+
+  /* Inline code */
+  :not(pre) > code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 13px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+  }
+  tr:nth-child(even) td { background: color-mix(in srgb, var(--bg) 60%, var(--surface)); }
+
+  /* Blockquotes */
+  blockquote {
+    margin: 12px 0;
+    padding: 10px 16px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+    border-radius: 0 4px 4px 0;
+  }
+  blockquote p:first-child { margin-top: 0; }
+  blockquote p:last-child { margin-bottom: 0; }
+
+  /* Horizontal rule inside content = hide (we use cards instead) */
+  main hr { display: none; }
+
+  /* ─── Footer ──────────────────────── */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    margin-top: 48px;
+  }
+  footer .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    text-decoration: none;
+    border: none;
+    margin-bottom: 24px;
+    transition: opacity 0.15s ease;
+  }
+  .download-btn:hover {
+    opacity: 0.85;
+    border-bottom: none;
+  }
+  .disclaimer {
+    color: var(--text-soft);
+    font-size: 13px;
+    line-height: 1.7;
+    max-width: 720px;
+    padding: 14px 18px;
+    background: var(--bg);
+    border-left: 3px solid var(--border);
+    border-radius: 0 4px 4px 0;
+    margin: 0;
+  }
+  .disclaimer strong { color: var(--text); }
+
+  /* ─── Mobile ──────────────────────── */
+  @media (max-width: 860px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 20px 16px;
+    }
+    nav#toc {
+      position: static;
+      max-height: none;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    nav#toc details summary {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-soft);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    nav#toc details summary::-webkit-details-marker { display: none; }
+    nav#toc details summary::after {
+      content: " ▾";
+      color: var(--accent);
+    }
+    nav#toc details[open] summary::after { content: " ▴"; }
+    nav#toc .toc-body { margin-top: 12px; }
+    .section-card {
+      padding: 20px;
+    }
+    header { padding: 24px 16px; }
+    header h1 { font-size: 22px; }
+  }
+
+  /* ─── Print ──────────────────────── */
+  @media print {
+    body { background: white; font-size: 11pt; }
+    header, footer, nav#toc { display: none; }
+    .layout {
+      display: block;
+      padding: 0;
+      max-width: none;
+    }
+    .section-card {
+      box-shadow: none;
+      border: none;
+      padding: 0;
+      margin: 0 0 16px;
+      page-break-inside: avoid;
+    }
+    h2 { font-size: 14pt; }
+    h3 { font-size: 12pt; }
+    pre, table { page-break-inside: avoid; }
+    a { color: var(--text); border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="title-area">
+      <span class="accent-bar"></span>
+      <h1>COMP4141 Notes Sheet</h1>
+    </div>
+    <button id="theme-toggle" aria-label="切换主题" title="切换亮/暗模式">
+      <span class="icon-moon">☾</span>
+      <span class="icon-sun">☀</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav id="toc" aria-label="目录">
+    <!-- 桌面直接展示；移动端通过 details 折叠 -->
+  </nav>
+  <main>
+    <div id="content"><p class="loading">正在载入笔记…</p></div>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="download-btn" href="notes.md" download="COMP4141-notes.md">
+      ⬇ 下载 Markdown 原文
+    </a>
+    <p class="disclaimer">
+      <strong>免责声明：</strong>本笔记为个人学习整理，仅作参考之用，不代表课程官方立场。内容可能随课程更新而过时或存在疏漏，使用者应以课程讲义和官方材料为准，由此产生的一切后果自行承担。如发现错误，欢迎反馈。
+    </p>
+  </div>
+</footer>
+
+<script>
+// Theme toggle — run synchronously to avoid flash of wrong theme
+(function () {
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+<script>
+(async function () {
+  const contentEl = document.getElementById('content');
+  const tocEl = document.getElementById('toc');
+
+  // 1. Fetch markdown
+  let md;
+  try {
+    const res = await fetch('notes.md', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(res.status);
+    md = await res.text();
+  } catch (err) {
+    contentEl.innerHTML = '<p class="loading" style="color:#b91c1c">载入失败，请稍后重试。</p>';
+    return;
+  }
+
+  // 2. Configure marked
+  marked.setOptions({ gfm: true, breaks: false });
+
+  // 3. Render
+  const html = marked.parse(md);
+
+  // 4. Wrap sections: split by <h3> so each Q becomes a card
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+
+  // Top-level h1/h2 (before first h3) go into an intro block
+  const cards = [];
+  let currentCard = null;
+  const children = Array.from(temp.childNodes);
+
+  for (const node of children) {
+    if (node.nodeType !== 1) continue; // skip text nodes at top level
+    const tag = node.tagName;
+    if (tag === 'H1' || tag === 'H2') {
+      // Start a new intro card (or section with big heading)
+      currentCard = document.createElement('section');
+      currentCard.className = 'section-card';
+      currentCard.appendChild(node.cloneNode(true));
+      cards.push(currentCard);
+    } else if (tag === 'H3') {
+      currentCard = document.createElement('section');
+      currentCard.className = 'section-card';
+      // Parse heading: "Q1 — ..." or "▌..."
+      const text = node.textContent.trim();
+      const qMatch = text.match(/^(Q\d+)\s*—\s*(.+)$/);
+      const blockMatch = text.match(/^▌\s*(.+)$/);
+      const newH3 = document.createElement('h3');
+      const slug = slugify(text);
+      newH3.id = slug;
+      if (qMatch) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = qMatch[1];
+        newH3.appendChild(chip);
+        newH3.appendChild(document.createTextNode(qMatch[2]));
+      } else if (blockMatch) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = '补充';
+        newH3.appendChild(chip);
+        newH3.appendChild(document.createTextNode(blockMatch[1]));
+      } else {
+        newH3.textContent = text;
+      }
+      currentCard.appendChild(newH3);
+      cards.push(currentCard);
+    } else if (tag === 'HR') {
+      // ignore
+    } else {
+      if (!currentCard) {
+        currentCard = document.createElement('section');
+        currentCard.className = 'section-card';
+        cards.push(currentCard);
+      }
+      currentCard.appendChild(node.cloneNode(true));
+    }
+  }
+
+  contentEl.innerHTML = '';
+  cards.forEach(c => contentEl.appendChild(c));
+
+  // 5. Build TOC from h3 ids
+  buildToc();
+
+  // 6. Scroll spy
+  setupScrollSpy();
+
+  function slugify(text) {
+    return 'sec-' + text
+      .replace(/[▌—\s]+/g, '-')
+      .replace(/[^\w一-鿿-]/g, '')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase();
+  }
+
+  function buildToc() {
+    const headings = contentEl.querySelectorAll('h3[id]');
+    if (!headings.length) return;
+
+    const isMobile = window.matchMedia('(max-width: 860px)').matches;
+
+    let listHtml = '<ul>';
+    headings.forEach(h => {
+      const id = h.id;
+      const chip = h.querySelector('.chip');
+      const chipText = chip ? chip.textContent : '';
+      const isSub = chipText === '补充';
+      let label = h.textContent.trim();
+      if (chip) {
+        if (isSub) {
+          label = label.replace(chipText, '').trim();
+        } else {
+          label = chipText + ' · ' + label.replace(chipText, '').trim();
+        }
+      }
+      const cls = isSub ? ' class="toc-sub"' : '';
+      listHtml += `<li${cls}><a href="#${id}">${label}</a></li>`;
+    });
+    listHtml += '</ul>';
+
+    if (isMobile) {
+      tocEl.innerHTML = `
+        <details>
+          <summary>目录</summary>
+          <div class="toc-body">${listHtml}</div>
+        </details>`;
+    } else {
+      tocEl.innerHTML = `<div class="toc-title">目录</div>${listHtml}`;
+    }
+  }
+
+  function setupScrollSpy() {
+    const links = tocEl.querySelectorAll('a[href^="#"]');
+    const idToLink = new Map();
+    links.forEach(a => idToLink.set(a.getAttribute('href').slice(1), a));
+
+    const headings = contentEl.querySelectorAll('h3[id]');
+    if (!headings.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(a => a.classList.remove('active'));
+          const link = idToLink.get(entry.target.id);
+          if (link) link.classList.add('active');
+        }
+      });
+    }, {
+      rootMargin: '-10% 0px -75% 0px',
+      threshold: 0
+    });
+
+    headings.forEach(h => observer.observe(h));
+  }
+})();
+</script>
+</body>
+</html>
