@@ -5,15 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COMP4141 Notes Sheet</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/comp4141/4141.png?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
   :root {
     --bg: #FAFAF7;
     --surface: #FFFFFF;
     --text: #1C1C1C;
     --text-soft: #555;
+    --text-faint: #888;
     --border: #E5E1D8;
     --accent: #B45309;
     --accent-soft: #FEF3C7;
+    --accent-2: #2563EB;
+    --accent-2-soft: #DBEAFE;
     --code-bg: #F4F2EC;
     --shadow: 0 1px 3px rgba(0,0,0,.05);
   }
@@ -23,9 +27,12 @@
     --surface: #1E1E26;
     --text: #E8E6E0;
     --text-soft: #9A9A9A;
+    --text-faint: #707070;
     --border: #2E2E38;
     --accent: #F59E0B;
     --accent-soft: #3A2E12;
+    --accent-2: #60A5FA;
+    --accent-2-soft: #1E2A45;
     --code-bg: #24242E;
     --shadow: 0 1px 3px rgba(0,0,0,.25);
   }
@@ -53,67 +60,219 @@
   /* ─── Header ──────────────────────── */
   header {
     background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 28px 24px;
+    position: relative;
+    padding: 22px 24px 0;
+  }
+  /* Subtle gradient accent at the very bottom of the header */
+  header::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--border) 12%,
+      var(--border) 88%,
+      transparent 100%
+    );
+    pointer-events: none;
   }
   header .wrap {
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
   }
-  header .title-area { flex: 1; min-width: 0; }
+  header .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: none;
+  }
+  header .logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    background: var(--accent-soft);
+    transition: transform 0.2s ease;
+  }
+  [data-theme="dark"] header .logo {
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  }
+  header .brand:hover .logo { transform: rotate(-4deg) scale(1.05); }
+  header .title-area { min-width: 0; }
   header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 19px;
     font-weight: 600;
     letter-spacing: -0.01em;
+    line-height: 1.2;
   }
-  header .accent-bar {
-    display: inline-block;
-    width: 28px;
-    height: 3px;
-    background: var(--accent);
-    margin-bottom: 12px;
-    border-radius: 2px;
+  header .subtitle {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--text-soft);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  header .subtitle .course-code {
+    font-family: "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  header .subtitle .dot {
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+
   #theme-toggle {
     background: none;
     border: 1px solid var(--border);
     color: var(--text-soft);
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    transition: color 0.15s, border-color 0.15s, background 0.2s, transform 0.2s ease;
     flex-shrink: 0;
   }
   #theme-toggle:hover {
     color: var(--accent);
     border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: rotate(15deg);
   }
+  #theme-toggle:active { transform: rotate(15deg) scale(0.92); }
   #theme-toggle .icon-sun { display: none; }
   [data-theme="dark"] #theme-toggle .icon-sun { display: block; }
   [data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+
+  /* ─── Back-to-top floating button ──── */
+  #back-to-top {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.92);
+    transition: opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1), visibility .25s, color .15s, border-color .15s, background .15s, box-shadow .25s ease;
+    z-index: 50;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [data-theme="dark"] #back-to-top {
+    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+  }
+  #back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  #back-to-top:hover {
+    color: white;
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(180,83,9,.35);
+    transform: translateY(-2px) scale(1.05);
+  }
+  #back-to-top:active {
+    transform: translateY(0) scale(0.96);
+    transition-duration: .08s;
+  }
+  #back-to-top svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.25;
+  }
+  @media print { #back-to-top { display: none; } }
+  @media (max-width: 640px) {
+    #back-to-top { right: 16px; bottom: 16px; width: 40px; height: 40px; }
+  }
+
+  /* ─── Tabs ──────────────────────── */
+  .tabs {
+    max-width: 1200px;
+    margin: 18px auto 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 2px;
+  }
+  .tab {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 9px 16px 11px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab::after {
+    content: "";
+    position: absolute;
+    left: 16px; right: 16px;
+    bottom: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
+  }
+  .tab:hover { color: var(--text); background: var(--bg); }
+  .tab.active { color: var(--accent); }
+  .tab.active::after { transform: scaleX(1); }
 
   /* ─── Layout ──────────────────────── */
   .layout {
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: 48px;
     padding: 32px 24px;
   }
 
+  .view { display: none; }
+  .view.active { display: grid; }   /* must match .layout's grid display */
+
   /* ─── TOC ─────────────────────────── */
-  nav#toc {
+  nav.toc {
     position: sticky;
     top: 24px;
     align-self: start;
@@ -121,8 +280,25 @@
     overflow-y: auto;
     padding-right: 8px;
     font-size: 13.5px;
+    /* Themed scrollbar — Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
-  nav#toc .toc-title {
+  /* Themed scrollbar — WebKit (Chrome/Safari/Edge) */
+  nav.toc::-webkit-scrollbar { width: 8px; }
+  nav.toc::-webkit-scrollbar-track { background: transparent; }
+  nav.toc::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  nav.toc::-webkit-scrollbar-thumb:hover {
+    background: var(--text-faint);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  nav.toc .toc-title {
     font-weight: 600;
     font-size: 12px;
     text-transform: uppercase;
@@ -130,97 +306,154 @@
     color: var(--text-soft);
     margin-bottom: 12px;
   }
-  nav#toc ul {
+  nav.toc ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  nav#toc li { margin: 2px 0; }
-  nav#toc a {
-    display: block;
-    padding: 6px 10px;
-    color: var(--text-soft);
+  nav.toc .toc-group { margin-bottom: 6px; }
+  nav.toc .toc-group > a.toc-parent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13.5px;
     text-decoration: none;
-    border-left: 2px solid transparent;
-    border-radius: 0 4px 4px 0;
+    border-radius: 4px;
     transition: all 0.15s ease;
   }
-  nav#toc a:hover {
+  nav.toc .toc-group > a.toc-parent:hover { background: var(--bg); }
+  nav.toc .toc-group > a.toc-parent.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  nav.toc .toc-q-chip {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+  nav.toc .toc-children {
+    margin: 2px 0 0 18px;
+    padding-left: 10px;
+    border-left: 1px solid var(--border);
+  }
+  nav.toc .toc-children li { margin: 1px 0; }
+  nav.toc .toc-children a {
+    display: block;
+    padding: 4px 8px;
+    color: var(--text-soft);
+    text-decoration: none;
+    font-size: 12.5px;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+  nav.toc .toc-children a:hover {
     color: var(--text);
     background: var(--bg);
   }
-  nav#toc a.active {
+  nav.toc .toc-children a.active {
     color: var(--accent);
-    border-left-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 500;
   }
-  nav#toc li.toc-sub {
-    margin-left: 16px;
-  }
-  nav#toc li.toc-sub a {
-    font-size: 12.5px;
-    padding: 4px 10px;
-    color: var(--text-soft);
-    position: relative;
-  }
-  nav#toc li.toc-sub a::before {
-    content: "";
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    width: 4px;
-    height: 1px;
-    background: var(--border);
+  nav.toc .toc-children a.sub::before {
+    content: "· ";
+    color: var(--text-faint);
   }
 
   /* ─── Main content ────────────────── */
-  main {
-    min-width: 0;
-  }
-  main > .loading {
+  main { min-width: 0; }
+  main .loading {
     color: var(--text-soft);
     padding: 48px 0;
     text-align: center;
   }
 
-  /* Section cards */
+  /* Question group banner (replaces boxed h2 cards) */
+  .q-group {
+    margin: 8px 0 32px;
+  }
+  .q-group:first-child { margin-top: 0; }
+  .q-group + .q-group { margin-top: 48px; }
+  .q-banner {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 0 0 12px;
+    margin: 0 0 20px;
+    border-bottom: 2px solid var(--accent);
+    scroll-margin-top: 24px;
+  }
+  .q-banner .q-chip {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+  .q-banner .q-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--text);
+    margin: 0;
+  }
+  .q-banner .q-meta {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-soft);
+    font-weight: 500;
+  }
+
+  /* Section cards (per-h3) */
   .section-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 28px 32px;
-    margin-bottom: 20px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
     box-shadow: var(--shadow);
   }
+  .section-card > h3:first-child { margin-top: 0; }
 
-  h2, h3 {
+  h3, h4 {
     scroll-margin-top: 24px;
     font-weight: 600;
     letter-spacing: -0.005em;
   }
-  h2 {
-    font-size: 22px;
-    margin: 0 0 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
   h3 {
-    font-size: 18px;
+    font-size: 17px;
     margin: 0 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    color: var(--text);
   }
-  h3 .chip {
+  h3 .sub-chip {
     display: inline-block;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 12px;
+    background: var(--accent-2-soft);
+    color: var(--accent-2);
+    font-size: 11px;
     font-weight: 600;
     padding: 2px 8px;
     border-radius: 4px;
     letter-spacing: 0.02em;
+    margin-right: 8px;
+    vertical-align: 2px;
+  }
+  h4 {
+    font-size: 15px;
+    margin: 18px 0 10px;
+    color: var(--text);
   }
 
   p { margin: 0.6em 0; }
@@ -234,14 +467,9 @@
 
   strong { color: var(--text); font-weight: 600; }
 
-  /* Lists */
-  ul, ol {
-    padding-left: 1.4em;
-    margin: 0.5em 0;
-  }
+  ul, ol { padding-left: 1.4em; margin: 0.5em 0; }
   li { margin: 2px 0; }
 
-  /* Inline code */
   :not(pre) > code {
     background: var(--code-bg);
     padding: 1px 6px;
@@ -249,7 +477,6 @@
     font-size: 12.5px;
   }
 
-  /* Code blocks */
   pre {
     background: var(--code-bg);
     border-left: 3px solid var(--accent);
@@ -259,13 +486,8 @@
     margin: 12px 0;
     line-height: 1.6;
   }
-  pre code {
-    background: none;
-    padding: 0;
-    font-size: 13px;
-  }
+  pre code { background: none; padding: 0; font-size: 13px; }
 
-  /* Tables */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -286,7 +508,6 @@
   }
   tr:nth-child(even) td { background: color-mix(in srgb, var(--bg) 60%, var(--surface)); }
 
-  /* Blockquotes */
   blockquote {
     margin: 12px 0;
     padding: 10px 16px;
@@ -298,8 +519,143 @@
   blockquote p:first-child { margin-top: 0; }
   blockquote p:last-child { margin-bottom: 0; }
 
-  /* Horizontal rule inside content = hide (we use cards instead) */
   main hr { display: none; }
+
+  /* KaTeX overflow fix */
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 0;
+  }
+
+  /* ─── Mock exam specific ──────────────────── */
+  .exam-intro {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    color: var(--text-soft);
+    font-size: 13.5px;
+  }
+  .exam-intro h2 { margin: 0 0 8px; font-size: 18px; color: var(--text); border: none; padding: 0; }
+  .exam-intro .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 10px;
+    font-size: 12.5px;
+  }
+  .exam-intro .meta-row span strong { color: var(--text); }
+
+  .exam-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .exam-card .q-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 18px 24px 0;
+    flex-wrap: wrap;
+  }
+  .exam-card .q-head .q-chip {
+    background: var(--accent);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .exam-card .q-head .q-topic {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .exam-card .q-head .q-marks {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-soft);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .exam-card .q-body {
+    padding: 14px 24px 18px;
+  }
+  .exam-card .q-body > :first-child { margin-top: 0; }
+  .exam-card .q-body > :last-child { margin-bottom: 0; }
+
+  .solution-toggle {
+    display: block;
+    width: 100%;
+    background: var(--bg);
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 12px 24px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .solution-toggle:hover { background: var(--accent-soft); }
+  .solution-toggle::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+  .solution-toggle.open::before { transform: rotate(90deg); }
+
+  .solution-body {
+    display: none;
+    padding: 20px 24px 22px;
+    border-top: 1px dashed var(--border);
+    background: color-mix(in srgb, var(--accent-soft) 30%, var(--surface));
+  }
+  .solution-body.open { display: block; }
+  .solution-body > :first-child { margin-top: 0; }
+  .solution-body > :last-child { margin-bottom: 0; }
+  .solution-body h3 {
+    font-size: 14.5px;
+    margin: 18px 0 8px;
+    color: var(--accent);
+  }
+  .solution-body h3:first-child { margin-top: 0; }
+  .solution-body h4 { font-size: 13.5px; margin: 14px 0 6px; }
+
+  .expand-all-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .expand-all-bar button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    padding: 6px 12px;
+    font-size: 12.5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .expand-all-bar button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
   /* ─── Footer ──────────────────────── */
   footer {
@@ -312,25 +668,32 @@
     max-width: 1200px;
     margin: 0 auto;
   }
+  .download-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
   .download-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     background: var(--accent);
     color: white;
-    padding: 10px 20px;
+    padding: 10px 18px;
     border-radius: 6px;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 13.5px;
     text-decoration: none;
     border: none;
-    margin-bottom: 24px;
     transition: opacity 0.15s ease;
   }
-  .download-btn:hover {
-    opacity: 0.85;
-    border-bottom: none;
+  .download-btn.secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
   }
+  .download-btn:hover { opacity: 0.85; border-bottom: none; }
   .disclaimer {
     color: var(--text-soft);
     font-size: 13px;
@@ -344,14 +707,32 @@
   }
   .disclaimer strong { color: var(--text); }
 
-  /* ─── Mobile ──────────────────────── */
-  @media (max-width: 860px) {
+  /* ─── Narrower desktop: shrink sidebar instead of collapsing ──── */
+  @media (max-width: 1100px) {
+    .layout {
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+    }
+  }
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: 180px 1fr;
+      gap: 24px;
+      padding: 24px 16px;
+    }
+    nav.toc { font-size: 12.5px; }
+    nav.toc .toc-group > a.toc-parent { font-size: 12.5px; padding: 6px 8px; }
+    nav.toc .toc-children a { font-size: 11.5px; }
+  }
+
+  /* ─── True mobile (phone) ──────────────────────── */
+  @media (max-width: 640px) {
     .layout {
       grid-template-columns: 1fr;
-      gap: 24px;
+      gap: 20px;
       padding: 20px 16px;
     }
-    nav#toc {
+    nav.toc {
       position: static;
       max-height: none;
       padding: 16px;
@@ -359,7 +740,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
     }
-    nav#toc details summary {
+    nav.toc details summary {
       font-weight: 600;
       font-size: 13px;
       color: var(--text-soft);
@@ -367,37 +748,30 @@
       user-select: none;
       list-style: none;
     }
-    nav#toc details summary::-webkit-details-marker { display: none; }
-    nav#toc details summary::after {
-      content: " ▾";
-      color: var(--accent);
-    }
-    nav#toc details[open] summary::after { content: " ▴"; }
-    nav#toc .toc-body { margin-top: 12px; }
-    .section-card {
-      padding: 20px;
-    }
-    header { padding: 24px 16px; }
+    nav.toc details summary::-webkit-details-marker { display: none; }
+    nav.toc details summary::after { content: " ▾"; color: var(--accent); }
+    nav.toc details[open] summary::after { content: " ▴"; }
+    nav.toc .toc-body { margin-top: 12px; }
+    .section-card { padding: 18px; }
+    header { padding: 24px 16px 0; }
     header h1 { font-size: 22px; }
+    .tabs { padding: 0 16px; margin-top: 20px; }
+    .tab { padding: 10px 14px; font-size: 13px; }
+    .q-banner .q-title { font-size: 19px; }
   }
 
   /* ─── Print ──────────────────────── */
   @media print {
     body { background: white; font-size: 11pt; }
-    header, footer, nav#toc { display: none; }
-    .layout {
-      display: block;
-      padding: 0;
-      max-width: none;
-    }
-    .section-card {
-      box-shadow: none;
-      border: none;
-      padding: 0;
-      margin: 0 0 16px;
+    header, footer, nav.toc, .tabs, .expand-all-bar, .solution-toggle { display: none; }
+    .layout { display: block; padding: 0; max-width: none; }
+    .view { display: block !important; }
+    .section-card, .exam-card {
+      box-shadow: none; border: none; padding: 0; margin: 0 0 16px;
       page-break-inside: avoid;
     }
-    h2 { font-size: 14pt; }
+    .solution-body { display: block !important; background: none; border-top: 1px solid #ccc; padding: 8px 0; }
+    h2, .q-banner { font-size: 14pt; }
     h3 { font-size: 12pt; }
     pre, table { page-break-inside: avoid; }
     a { color: var(--text); border-bottom: none; }
@@ -408,39 +782,94 @@
 
 <header>
   <div class="wrap">
-    <div class="title-area">
-      <span class="accent-bar"></span>
-      <h1>COMP4141 Notes Sheet</h1>
-    </div>
+    <a href="#" class="brand" aria-label="返回顶部">
+      <img class="logo" src="4141.png" alt="" />
+      <div class="title-area">
+        <h1>Notes Sheet</h1>
+        <p class="subtitle">
+          <span class="course-code">COMP4141</span>
+          <span class="dot"></span>
+          <span>Theory of Computation</span>
+        </p>
+      </div>
+    </a>
     <button id="theme-toggle" aria-label="切换主题" title="切换亮/暗模式">
       <span class="icon-moon">☾</span>
       <span class="icon-sun">☀</span>
     </button>
   </div>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-view="notes" role="tab">课程笔记</button>
+    <button class="tab" data-view="exam" role="tab">模拟试题与解答</button>
+  </div>
 </header>
 
-<div class="layout">
-  <nav id="toc" aria-label="目录">
-    <!-- 桌面直接展示；移动端通过 details 折叠 -->
-  </nav>
+<!-- ── Notes view ───────────────────── -->
+<div class="layout view active" id="view-notes">
+  <nav class="toc" id="toc-notes" aria-label="笔记目录"></nav>
   <main>
-    <div id="content"><p class="loading">正在载入笔记…</p></div>
+    <div id="content-notes"><p class="loading">正在载入笔记…</p></div>
+  </main>
+</div>
+
+<!-- ── Mock exam view ───────────────── -->
+<div class="layout view" id="view-exam">
+  <nav class="toc" id="toc-exam" aria-label="试题目录"></nav>
+  <main>
+    <div id="content-exam"><p class="loading">正在载入试题与解答…</p></div>
   </main>
 </div>
 
 <footer>
   <div class="wrap">
-    <a class="download-btn" href="notes.md" download="COMP4141-notes.md">
-      ⬇ 下载 Markdown 原文
-    </a>
+    <div class="download-row">
+      <a class="download-btn" href="notes.md" download="COMP4141-notes.md">⬇ 下载笔记</a>
+      <a class="download-btn secondary" href="mock_final_exam.md" download="COMP4141-mock-exam.md">⬇ 下载模拟试卷</a>
+      <a class="download-btn secondary" href="mock_final_solutions.md" download="COMP4141-mock-solutions.md">⬇ 下载参考解答</a>
+    </div>
     <p class="disclaimer">
-      <strong>免责声明：</strong>本笔记为个人学习整理，仅作参考之用，不代表课程官方立场。内容可能随课程更新而过时或存在疏漏，使用者应以课程讲义和官方材料为准，由此产生的一切后果自行承担。如发现错误，欢迎反馈。
+      <strong>免责声明：</strong>本笔记与模拟试题为个人学习整理，仅作参考之用，不代表课程官方立场。内容可能随课程更新而过时或存在疏漏，使用者应以课程讲义和官方材料为准，由此产生的一切后果自行承担。如发现错误，欢迎反馈。
     </p>
   </div>
 </footer>
 
+<button id="back-to-top" aria-label="返回顶部" title="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
+
 <script>
-// Theme toggle — run synchronously to avoid flash of wrong theme
+// Brand link → smooth scroll to top
+(function () {
+  const brand = document.querySelector('header .brand');
+  if (brand) brand.addEventListener('click', e => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+// Back-to-top button
+(function () {
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  let ticking = false;
+  function update() {
+    btn.classList.toggle('visible', window.scrollY > 320);
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  update();
+})();
+</script>
+
+<script>
+// Theme toggle — run synchronously to avoid flash
 (function () {
   const saved = localStorage.getItem('theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -462,13 +891,293 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
-<script>
-(async function () {
-  const contentEl = document.getElementById('content');
-  const tocEl = document.getElementById('toc');
 
-  // 1. Fetch markdown
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<script>
+// ─── Tab switching ───────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const view = tab.dataset.view;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+    if (view === 'exam' && !window.__examLoaded) loadExam();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
+});
+
+// ─── Helpers ─────────────────────────
+function slugify(text) {
+  return text
+    .replace(/[▌—\s]+/g, '-')
+    .replace(/[^\w一-鿿-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+}
+
+// Heuristic: does this string look like math (worth running through KaTeX)?
+const MATH_RE = /[\^_{}]|\\[a-zA-Z]+|[∪∩⟨⟩≠≤≥∈∉→⇒⇔∀∃ΣΓΔΛΦΨΩαβγδεζηθλμπρσφχψωℕℝℤℚ⊆⊇⊂⊃⊕⊗·×÷±∞∅¬∧∨₀-₉⁰-⁹]/;
+// Text-arrow patterns like --1--> that should NOT be treated as math
+const TEXT_ARROW_RE = /--[^>]*-*>/;
+
+// ── Table pipe fix ────────────────────────────────────────────────────────────
+// marked splits table rows on ALL | including those inside backtick code spans.
+// Replace them with a private-use placeholder before parsing, restore afterwards.
+const PIPE_PH = ''; // PUA char, invisible, won't appear in normal text
+function fixTableCodePipes(md) {
+  return md.replace(/^\|.*\|[ \t]*$/gm, row =>
+    row.replace(/`[^`\n]+`/g, span => span.replace(/\|/g, PIPE_PH))
+  );
+}
+
+// ── Display math via marked extension ────────────────────────────────────────
+// Do NOT convert \[...\] to $$...$$; markdown would escape the backslashes
+// inside (e.g. \{ → {).  Instead intercept at the block-token level and render
+// directly with KaTeX so the LaTeX source is never touched by markdown.
+function installMarkedMathExtension() {
+  if (!window.katex || window.__markedMathInstalled) return;
+  window.__markedMathInstalled = true;
+  const renderTex = (tex, displayMode) => {
+    try {
+      const html = katex.renderToString(tex, { throwOnError: false, strict: false, displayMode });
+      return displayMode ? `<div class="katex-display">${html}</div>` : html;
+    } catch (e) {
+      return displayMode
+        ? `<pre class="math-error"><code>${escapeHtml(tex)}</code></pre>`
+        : `<code>${escapeHtml(tex)}</code>`;
+    }
+  };
+  marked.use({
+    extensions: [{
+      name: 'displaymath_brackets',
+      level: 'block',
+      start(src) { return src.indexOf('\\['); },
+      tokenizer(src) {
+        const m = src.match(/^\\\[([\s\S]*?)\\\]/);
+        if (m) return { type: 'displaymath_brackets', raw: m[0], tex: m[1].trim() };
+      },
+      renderer({ tex }) { return renderTex(tex, true); }
+    }, {
+      name: 'displaymath_dollar',
+      level: 'block',
+      start(src) { return src.indexOf('$$'); },
+      tokenizer(src) {
+        const m = src.match(/^\$\$([\s\S]+?)\$\$/);
+        if (m) return { type: 'displaymath_dollar', raw: m[0], tex: m[1].trim() };
+      },
+      renderer({ tex }) { return renderTex(tex, true); }
+    }, {
+      name: 'inlinemath_paren',
+      level: 'inline',
+      start(src) { return src.indexOf('\\('); },
+      tokenizer(src) {
+        const m = src.match(/^\\\((.+?)\\\)/);
+        if (m) return { type: 'inlinemath_paren', raw: m[0], tex: m[1] };
+      },
+      renderer({ tex }) { return renderTex(tex, false); }
+    }, {
+      name: 'inlinemath_dollar',
+      level: 'inline',
+      start(src) {
+        const i = src.indexOf('$');
+        // skip $$ (handled as block) and bare $ at end of line
+        if (i < 0) return -1;
+        if (src[i + 1] === '$') return src.indexOf('$', i + 2);
+        return i;
+      },
+      tokenizer(src) {
+        // single $...$ on one line, no surrounding $
+        const m = src.match(/^\$(?!\$)((?:[^$\n\\]|\\.)+?)\$(?!\d)/);
+        if (m) return { type: 'inlinemath_dollar', raw: m[0], tex: m[1] };
+      },
+      renderer({ tex }) { return renderTex(tex, false); }
+    }]
+  });
+}
+
+// Called once after KaTeX loads
+function preprocessMathDelimiters(md) {
+  // Only handle \( \) inline here; \[ \] are handled by the marked extension
+  return md.replace(/\\\(/g, '$').replace(/\\\)/g, '$');
+}
+
+// Convert pseudo-LaTeX/unicode math to something KaTeX can render.
+function preprocessInlineMath(s) {
+  return s
+    // common unicode → LaTeX
+    .replace(/∪/g, '\\cup ')
+    .replace(/∩/g, '\\cap ')
+    .replace(/⟨/g, '\\langle ')
+    .replace(/⟩/g, '\\rangle ')
+    .replace(/≠/g, '\\neq ')
+    .replace(/≤/g, '\\leq ')
+    .replace(/≥/g, '\\geq ')
+    .replace(/∈/g, '\\in ')
+    .replace(/∉/g, '\\notin ')
+    .replace(/⊆/g, '\\subseteq ')
+    .replace(/⊇/g, '\\supseteq ')
+    .replace(/⊂/g, '\\subset ')
+    .replace(/⊃/g, '\\supset ')
+    .replace(/→/g, '\\to ')
+    .replace(/⇒/g, '\\Rightarrow ')
+    .replace(/⇔/g, '\\Leftrightarrow ')
+    .replace(/∀/g, '\\forall ')
+    .replace(/∃/g, '\\exists ')
+    .replace(/¬/g, '\\neg ')
+    .replace(/∧/g, '\\land ')
+    .replace(/∨/g, '\\lor ')
+    .replace(/∅/g, '\\emptyset ')
+    .replace(/∞/g, '\\infty ')
+    .replace(/×/g, '\\times ')
+    .replace(/·/g, '\\cdot ')
+    .replace(/±/g, '\\pm ')
+    .replace(/Σ/g, '\\Sigma ')
+    .replace(/Γ/g, '\\Gamma ')
+    .replace(/Δ/g, '\\Delta ')
+    .replace(/Λ/g, '\\Lambda ')
+    .replace(/Φ/g, '\\Phi ')
+    .replace(/Ψ/g, '\\Psi ')
+    .replace(/Ω/g, '\\Omega ')
+    .replace(/α/g, '\\alpha ')
+    .replace(/β/g, '\\beta ')
+    .replace(/γ/g, '\\gamma ')
+    .replace(/δ/g, '\\delta ')
+    .replace(/ε/g, '\\varepsilon ')
+    .replace(/ζ/g, '\\zeta ')
+    .replace(/η/g, '\\eta ')
+    .replace(/θ/g, '\\theta ')
+    .replace(/λ/g, '\\lambda ')
+    .replace(/μ/g, '\\mu ')
+    .replace(/π/g, '\\pi ')
+    .replace(/ρ/g, '\\rho ')
+    .replace(/σ/g, '\\sigma ')
+    .replace(/φ/g, '\\phi ')
+    .replace(/χ/g, '\\chi ')
+    .replace(/ψ/g, '\\psi ')
+    .replace(/ω/g, '\\omega ')
+    .replace(/ℕ/g, '\\mathbb{N}')
+    .replace(/ℝ/g, '\\mathbb{R}')
+    .replace(/ℤ/g, '\\mathbb{Z}')
+    .replace(/ℚ/g, '\\mathbb{Q}')
+    // unicode subscripts ₀-₉
+    .replace(/([a-zA-Z])([₀-₉]+)/g, (_, base, subs) => base + '_{' + subs.replace(/[₀-₉]/g, c => '0123456789'['₀₁₂₃₄₅₆₇₈₉'.indexOf(c)]) + '}')
+    // unicode superscripts ⁰-⁹
+    .replace(/([a-zA-Z0-9)\]}])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g, (_, base, sups) => base + '^{' + sups.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => '0123456789'['⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)]) + '}')
+    // pipe used as set-builder "such that"
+    .replace(/\s\|\s/g, ' \\mid ');
+}
+
+// Walk the string and turn set-literal `{` / `}` into visible `\{` / `\}`.
+// Braces that follow `^`, `_`, or a letter (e.g. `\mathbb{N}`) stay as grouping.
+function escapeSetBraces(s) {
+  const out = [];
+  const stack = []; // 'group' (invisible) or 'set' (visible)
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === '\\' && i + 1 < s.length) {
+      out.push(ch, s[i + 1]);
+      i++;
+      continue;
+    }
+    if (ch === '{') {
+      const prev = i > 0 ? s[i - 1] : '';
+      const isGroup = prev === '^' || prev === '_' || /[a-zA-Z]/.test(prev);
+      if (isGroup) { out.push('{'); stack.push('group'); }
+      else { out.push('\\{'); stack.push('set'); }
+    } else if (ch === '}') {
+      const top = stack.pop();
+      out.push(top === 'set' ? '\\}' : '}');
+    } else {
+      out.push(ch);
+    }
+  }
+  return out.join('');
+}
+
+// Render every inline <code> that looks like math via KaTeX.
+function renderInlineCodeMath(root) {
+  if (!window.katex) return;
+  const codes = root.querySelectorAll('code');
+  codes.forEach(code => {
+    if (code.parentElement && code.parentElement.tagName === 'PRE') return;
+    const raw = code.textContent;
+    if (!MATH_RE.test(raw)) return;
+    if (TEXT_ARROW_RE.test(raw)) return;  // NFA/DFA text arrows, not math
+    try {
+      const tex = escapeSetBraces(preprocessInlineMath(raw));
+      const span = document.createElement('span');
+      katex.render(tex, span, { throwOnError: false, strict: false, output: 'html' });
+      code.replaceWith(span);
+    } catch (e) {
+      // leave as code on failure
+    }
+  });
+}
+
+function renderMath(root) {
+  // 1) display + inline $...$ via auto-render
+  if (window.renderMathInElement) {
+    renderMathInElement(root, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true }
+      ],
+      throwOnError: false,
+      strict: false,
+      ignoredTags: ['script','noscript','style','textarea','pre','code']
+    });
+  }
+  // 2) backtick-wrapped pseudo-math → KaTeX
+  renderInlineCodeMath(root);
+}
+
+function scrollTocToLink(tocEl, link) {
+  // Scroll the TOC container (not the page) so the active link is visible
+  const tocRect = tocEl.getBoundingClientRect();
+  const linkRect = link.getBoundingClientRect();
+  if (linkRect.top < tocRect.top + 20 || linkRect.bottom > tocRect.bottom - 20) {
+    tocEl.scrollTo({
+      top: tocEl.scrollTop + linkRect.top - tocRect.top - tocEl.clientHeight / 2 + link.offsetHeight / 2,
+      behavior: 'smooth'
+    });
+  }
+}
+
+function setupScrollSpy(tocEl, contentEl, headingSelector) {
+  const links = tocEl.querySelectorAll('a[href^="#"]');
+  const idToLink = new Map();
+  links.forEach(a => idToLink.set(a.getAttribute('href').slice(1), a));
+  const headings = contentEl.querySelectorAll(headingSelector);
+  if (!headings.length) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const link = idToLink.get(entry.target.id);
+        if (!link) return;
+        links.forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+        // activate parent group entry too
+        const parentGroup = link.closest('.toc-group');
+        if (parentGroup) {
+          const parent = parentGroup.querySelector('.toc-parent');
+          if (parent) parent.classList.add('active');
+        }
+        // keep the active link visible in the TOC sidebar
+        scrollTocToLink(tocEl, link);
+      }
+    });
+  }, { rootMargin: '-10% 0px -75% 0px', threshold: 0 });
+  headings.forEach(h => observer.observe(h));
+}
+
+// ─── Notes loader ────────────────────
+(async function loadNotes() {
+  const contentEl = document.getElementById('content-notes');
+  const tocEl = document.getElementById('toc-notes');
   let md;
   try {
     const res = await fetch('notes.md', { cache: 'no-cache' });
@@ -478,147 +1187,307 @@ document.addEventListener('DOMContentLoaded', () => {
     contentEl.innerHTML = '<p class="loading" style="color:#b91c1c">载入失败，请稍后重试。</p>';
     return;
   }
-
-  // 2. Configure marked
   marked.setOptions({ gfm: true, breaks: false });
-
-  // 3. Render
-  const html = marked.parse(md);
-
-  // 4. Wrap sections: split by <h3> so each Q becomes a card
+  installMarkedMathExtension();
+  const html = marked.parse(fixTableCodePipes(preprocessMathDelimiters(md)))
+                     .replace(new RegExp(PIPE_PH, 'g'), '|');
   const temp = document.createElement('div');
   temp.innerHTML = html;
 
-  // Top-level h1/h2 (before first h3) go into an intro block
-  const cards = [];
-  let currentCard = null;
-  const children = Array.from(temp.childNodes);
+  // Group by H2 (Q-banners). Each h3 under it becomes a card.
+  contentEl.innerHTML = '';
+  const children = Array.from(temp.childNodes).filter(n => n.nodeType === 1);
+
+  let currentGroup = null;       // .q-group div
+  let currentCard = null;        // .section-card
+  const groups = [];             // list of { id, qLabel, title, cards: [{id, title, isSub}] }
+  let currentMeta = null;
+
+  function newGroup(h2Node) {
+    const text = h2Node.textContent.trim();
+    // parse "Q1. Title" or fallback to plain title
+    const m = text.match(/^(Q\d+)[.．]\s*(.+)$/);
+    const qLabel = m ? m[1] : null;
+    const title = m ? m[2] : text;
+    const id = 'g-' + slugify(qLabel ? qLabel + '-' + title : title);
+
+    const groupEl = document.createElement('section');
+    groupEl.className = 'q-group';
+
+    const banner = document.createElement('div');
+    banner.className = 'q-banner';
+    banner.id = id;
+    if (qLabel) {
+      const chip = document.createElement('span');
+      chip.className = 'q-chip';
+      chip.textContent = qLabel;
+      banner.appendChild(chip);
+    }
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'q-title';
+    titleEl.textContent = title;
+    banner.appendChild(titleEl);
+
+    groupEl.appendChild(banner);
+    contentEl.appendChild(groupEl);
+    currentGroup = groupEl;
+    currentCard = null;
+    currentMeta = { id, qLabel, title, cards: [] };
+    groups.push(currentMeta);
+  }
+
+  function newCard(h3Node) {
+    if (!currentGroup) {
+      // fallback: create an untitled group
+      const groupEl = document.createElement('section');
+      groupEl.className = 'q-group';
+      contentEl.appendChild(groupEl);
+      currentGroup = groupEl;
+      currentMeta = { id: 'g-misc', qLabel: null, title: '', cards: [] };
+      groups.push(currentMeta);
+    }
+    const text = h3Node.textContent.trim();
+    let chipLabel = null;
+    let displayText = text;
+    if (/例题/.test(text)) {
+      chipLabel = '例题';
+      displayText = text.replace(/^补充[：:]?\s*/, '');
+    } else if (/^补充/.test(text)) {
+      chipLabel = '补充';
+      displayText = text.replace(/^补充[：:]?\s*/, '');
+    }
+    const isSub = chipLabel !== null;
+    const id = 's-' + slugify(text);
+    const card = document.createElement('section');
+    card.className = 'section-card';
+    const newH3 = document.createElement('h3');
+    newH3.id = id;
+    if (chipLabel) {
+      const chip = document.createElement('span');
+      chip.className = 'sub-chip';
+      chip.textContent = chipLabel;
+      newH3.appendChild(chip);
+    }
+    newH3.appendChild(document.createTextNode(displayText));
+    card.appendChild(newH3);
+    currentGroup.appendChild(card);
+    currentCard = card;
+    currentMeta.cards.push({ id, title: text, isSub });
+  }
 
   for (const node of children) {
-    if (node.nodeType !== 1) continue; // skip text nodes at top level
     const tag = node.tagName;
-    if (tag === 'H1' || tag === 'H2') {
-      // Start a new intro card (or section with big heading)
-      currentCard = document.createElement('section');
-      currentCard.className = 'section-card';
-      currentCard.appendChild(node.cloneNode(true));
-      cards.push(currentCard);
+    if (tag === 'H1') {
+      // skip top h1 (use page title)
+      continue;
+    } else if (tag === 'H2') {
+      newGroup(node);
     } else if (tag === 'H3') {
-      currentCard = document.createElement('section');
-      currentCard.className = 'section-card';
-      // Parse heading: "Q1 — ..." or "▌..."
-      const text = node.textContent.trim();
-      const qMatch = text.match(/^(Q\d+)\s*—\s*(.+)$/);
-      const blockMatch = text.match(/^▌\s*(.+)$/);
-      const newH3 = document.createElement('h3');
-      const slug = slugify(text);
-      newH3.id = slug;
-      if (qMatch) {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = qMatch[1];
-        newH3.appendChild(chip);
-        newH3.appendChild(document.createTextNode(qMatch[2]));
-      } else if (blockMatch) {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = '补充';
-        newH3.appendChild(chip);
-        newH3.appendChild(document.createTextNode(blockMatch[1]));
-      } else {
-        newH3.textContent = text;
-      }
-      currentCard.appendChild(newH3);
-      cards.push(currentCard);
+      newCard(node);
     } else if (tag === 'HR') {
-      // ignore
+      // ignore hr separators
     } else {
       if (!currentCard) {
-        currentCard = document.createElement('section');
-        currentCard.className = 'section-card';
-        cards.push(currentCard);
+        // content before any h3 — attach to group banner area
+        if (!currentGroup) newGroup(document.createElement('h2'));
+        // create an implicit intro card
+        const card = document.createElement('section');
+        card.className = 'section-card';
+        currentGroup.appendChild(card);
+        currentCard = card;
       }
       currentCard.appendChild(node.cloneNode(true));
     }
   }
 
-  contentEl.innerHTML = '';
-  cards.forEach(c => contentEl.appendChild(c));
-
-  // 5. Build TOC from h3 ids
-  buildToc();
-
-  // 6. Scroll spy
-  setupScrollSpy();
-
-  function slugify(text) {
-    return 'sec-' + text
-      .replace(/[▌—\s]+/g, '-')
-      .replace(/[^\w一-鿿-]/g, '')
-      .replace(/^-+|-+$/g, '')
-      .toLowerCase();
-  }
-
-  function buildToc() {
-    const headings = contentEl.querySelectorAll('h3[id]');
-    if (!headings.length) return;
-
-    const isMobile = window.matchMedia('(max-width: 860px)').matches;
-
-    let listHtml = '<ul>';
-    headings.forEach(h => {
-      const id = h.id;
-      const chip = h.querySelector('.chip');
-      const chipText = chip ? chip.textContent : '';
-      const isSub = chipText === '补充';
-      let label = h.textContent.trim();
-      if (chip) {
-        if (isSub) {
-          label = label.replace(chipText, '').trim();
-        } else {
-          label = chipText + ' · ' + label.replace(chipText, '').trim();
-        }
-      }
-      const cls = isSub ? ' class="toc-sub"' : '';
-      listHtml += `<li${cls}><a href="#${id}">${label}</a></li>`;
-    });
-    listHtml += '</ul>';
-
-    if (isMobile) {
-      tocEl.innerHTML = `
-        <details>
-          <summary>目录</summary>
-          <div class="toc-body">${listHtml}</div>
-        </details>`;
-    } else {
-      tocEl.innerHTML = `<div class="toc-title">目录</div>${listHtml}`;
-    }
-  }
-
-  function setupScrollSpy() {
-    const links = tocEl.querySelectorAll('a[href^="#"]');
-    const idToLink = new Map();
-    links.forEach(a => idToLink.set(a.getAttribute('href').slice(1), a));
-
-    const headings = contentEl.querySelectorAll('h3[id]');
-    if (!headings.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          links.forEach(a => a.classList.remove('active'));
-          const link = idToLink.get(entry.target.id);
-          if (link) link.classList.add('active');
-        }
-      });
-    }, {
-      rootMargin: '-10% 0px -75% 0px',
-      threshold: 0
-    });
-
-    headings.forEach(h => observer.observe(h));
-  }
+  // Build TOC (hierarchical)
+  buildNotesToc(tocEl, groups);
+  renderMath(contentEl);
+  setupScrollSpy(tocEl, contentEl, '.q-banner, h3[id]');
 })();
+
+function buildNotesToc(tocEl, groups) {
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  let html = '';
+  groups.forEach(g => {
+    html += '<li class="toc-group">';
+    html += `<a class="toc-parent" href="#${g.id}">`;
+    if (g.qLabel) html += `<span class="toc-q-chip">${g.qLabel}</span>`;
+    html += `<span>${escapeHtml(g.title)}</span></a>`;
+    if (g.cards.length) {
+      html += '<ul class="toc-children">';
+      g.cards.forEach(c => {
+        html += `<li><a href="#${c.id}" class="${c.isSub ? 'sub' : ''}">${escapeHtml(c.title)}</a></li>`;
+      });
+      html += '</ul>';
+    }
+    html += '</li>';
+  });
+  const listHtml = `<ul>${html}</ul>`;
+  if (isMobile) {
+    tocEl.innerHTML = `<details><summary>目录</summary><div class="toc-body">${listHtml}</div></details>`;
+  } else {
+    tocEl.innerHTML = `<div class="toc-title">目录</div>${listHtml}`;
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ─── Mock exam loader ────────────────
+async function loadExam() {
+  window.__examLoaded = true;
+  const contentEl = document.getElementById('content-exam');
+  const tocEl = document.getElementById('toc-exam');
+  let examMd, solMd;
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch('mock_final_exam.md', { cache: 'no-cache' }),
+      fetch('mock_final_solutions.md', { cache: 'no-cache' })
+    ]);
+    if (!r1.ok || !r2.ok) throw new Error('fetch failed');
+    examMd = await r1.text();
+    solMd = await r2.text();
+  } catch (err) {
+    contentEl.innerHTML = '<p class="loading" style="color:#b91c1c">载入失败，请稍后重试。</p>';
+    return;
+  }
+
+  // Split each by "## Question N"
+  const examParts = splitByQuestion(examMd);
+  const solParts = splitByQuestion(solMd);
+
+  contentEl.innerHTML = '';
+
+  // Skip the preamble (university header / exam metadata) — go straight to Q1
+
+  // Expand-all bar
+  const bar = document.createElement('div');
+  bar.className = 'expand-all-bar';
+  bar.innerHTML = '<button id="expand-all">展开全部解答</button><button id="collapse-all">折叠全部</button>';
+  contentEl.appendChild(bar);
+
+  const tocItems = [];
+
+  examParts.questions.forEach(q => {
+    const sol = solParts.questions.find(s => s.num === q.num);
+    const card = document.createElement('section');
+    card.className = 'exam-card';
+    const id = 'q' + q.num;
+    card.id = id;
+
+    const head = document.createElement('div');
+    head.className = 'q-head';
+    head.innerHTML = `
+      <span class="q-chip">Q${q.num}</span>
+      <span class="q-topic">${escapeHtml(q.topic || '')}</span>
+      ${q.marks ? `<span class="q-marks">${escapeHtml(q.marks)}</span>` : ''}
+    `;
+    card.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'q-body';
+    body.innerHTML = marked.parse(fixTableCodePipes(preprocessMathDelimiters(q.body))).replace(new RegExp(PIPE_PH, 'g'), '|');
+    card.appendChild(body);
+
+    if (sol) {
+      const toggle = document.createElement('button');
+      toggle.className = 'solution-toggle';
+      toggle.textContent = '显示参考解答';
+      const solBody = document.createElement('div');
+      solBody.className = 'solution-body';
+      solBody.innerHTML = marked.parse(fixTableCodePipes(preprocessMathDelimiters(sol.body))).replace(new RegExp(PIPE_PH, 'g'), '|');
+      toggle.addEventListener('click', () => {
+        const open = solBody.classList.toggle('open');
+        toggle.classList.toggle('open', open);
+        toggle.textContent = open ? '隐藏参考解答' : '显示参考解答';
+      });
+      card.appendChild(toggle);
+      card.appendChild(solBody);
+    }
+
+    contentEl.appendChild(card);
+    tocItems.push({ id, num: q.num, topic: q.topic });
+  });
+
+  // Expand/collapse all
+  document.getElementById('expand-all').addEventListener('click', () => {
+    contentEl.querySelectorAll('.solution-toggle').forEach(t => {
+      const sb = t.nextElementSibling;
+      sb.classList.add('open');
+      t.classList.add('open');
+      t.textContent = '隐藏参考解答';
+    });
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    contentEl.querySelectorAll('.solution-toggle').forEach(t => {
+      const sb = t.nextElementSibling;
+      sb.classList.remove('open');
+      t.classList.remove('open');
+      t.textContent = '显示参考解答';
+    });
+  });
+
+  // TOC for exam
+  buildExamToc(tocEl, tocItems);
+  renderMath(contentEl);
+  setupScrollSpy(tocEl, contentEl, '.exam-card');
+}
+
+function splitByQuestion(md) {
+  // split on lines like "## Question 1 (Topic). (marks)" or "## Question 1 ..."
+  const re = /^## Question (\d+)([^\n]*)\n/gm;
+  const matches = [];
+  let m;
+  while ((m = re.exec(md)) !== null) {
+    matches.push({ num: parseInt(m[1], 10), header: m[2], start: m.index, headerEnd: m.index + m[0].length });
+  }
+  const preamble = matches.length ? md.slice(0, matches[0].start).trim() : md.trim();
+  const questions = matches.map((cur, i) => {
+    const next = matches[i + 1];
+    let body = md.slice(cur.headerEnd, next ? next.start : md.length).trim();
+    // strip trailing "End of Exam" and bare "---" lines, repeatedly
+    let prev;
+    do {
+      prev = body;
+      body = body.replace(/\n?End of Exam\s*$/i, '').trim();
+      body = body.replace(/\n?-{3,}\s*$/, '').trim();
+    } while (body !== prev);
+    // parse header: " (Topic). (marks)" — extract topic and marks
+    let topic = '', marks = '';
+    const hm = cur.header.match(/^\s*\(([^)]+)\)\s*\.?\s*\(([^)]+)\)\s*\.?\s*$/);
+    if (hm) {
+      topic = hm[1].trim();
+      marks = hm[2].trim();
+    } else {
+      // looser parse
+      const tm = cur.header.match(/\(([^)]+)\)/);
+      if (tm) topic = tm[1].trim();
+      const mm = cur.header.match(/\(([^)]*marks?[^)]*)\)/i);
+      if (mm) marks = mm[1].trim();
+    }
+    return { num: cur.num, topic, marks, body };
+  });
+  return { preamble, questions };
+}
+
+function buildExamToc(tocEl, items) {
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  let html = '<ul>';
+  items.forEach(it => {
+    html += `<li class="toc-group"><a class="toc-parent" href="#${it.id}">
+      <span class="toc-q-chip">Q${it.num}</span>
+      <span>${escapeHtml(it.topic || '')}</span>
+    </a></li>`;
+  });
+  html += '</ul>';
+  if (isMobile) {
+    tocEl.innerHTML = `<details><summary>目录</summary><div class="toc-body">${html}</div></details>`;
+  } else {
+    tocEl.innerHTML = `<div class="toc-title">题目</div>${html}`;
+  }
+}
 </script>
 </body>
 </html>
